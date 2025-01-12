@@ -1,0 +1,30 @@
+body {
+  background-color: black;
+  color: white;
+  font-family: "Arial";
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+h1 {
+  font-weight: semi-bold;
+  font-size: 2em;
+}
+
+button {
+  background-color: white;
+  color: black;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+}

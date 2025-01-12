@@ -10,13 +10,26 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(express.static("public"));
+
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
 app.get("/", (req, res) => {
-  res.render("index", {
-    name: "User",
-    message: "Express with EJS",
+  fs.access("file.txt", fs.constants.R_OK, (err) => {
+    if (err) {
+      res.status(404).send("File Not Found");
+    } else {
+      fs.readFile("file.txt", "utf8", (err, data) => {
+        if (err) {
+          res.status(500).send("Error Reading File");
+        } else {
+          res.render("index", {
+            message: data,
+          });
+        }
+      });
+    }
   });
 });
 
@@ -40,9 +53,9 @@ app.post("/send", (req, res) => {
   const { message } = req.body;
   fs.writeFile("file.txt", message, (err) => {
     if (err) {
-      res.status(500).send("Error Writing File");
+      res.status(500).send("Error Sending Data");
     } else {
-      res.send("File Written Successfully");
+      res.send("Data sent successfully");
     }
   });
 });
