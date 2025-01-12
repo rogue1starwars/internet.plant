@@ -1,13 +1,23 @@
 //app.js
 
 const express = require("express");
+const fileUpload = require("express-fileupload");
 
 const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(
+  fileUpload({
+    limits: {
+      fileSize: 10000000,
+    },
+    abordOnLimit: true,
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static("public"));
@@ -15,7 +25,7 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   fs.access("file.txt", fs.constants.R_OK, (err) => {
     if (err) {
       res.status(404).send("File Not Found");
@@ -23,9 +33,24 @@ app.get("/", (req, res) => {
       fs.readFile("file.txt", "utf8", (err, data) => {
         if (err) {
           res.status(500).send("Error Reading File");
+          return;
         } else {
-          res.render("index", {
-            message: data,
+          const message = data;
+          fs.readdir(path.join(__dirname, "public", "upload"), (err, files) => {
+            if (err) {
+              res.status(500).send("Error reading files");
+              return;
+            }
+
+            const sortedFiles = files
+              .filter((file) => /\.(jpg|jpeg|png|gif)$/i.test(file))
+              .sort()
+              .slice(0, 10);
+
+            res.render("index", {
+              message: message,
+              images: sortedFiles,
+            });
           });
         }
       });
@@ -33,20 +58,36 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/file", (req, res) => {
-  fs.access("file.txt", fs.constants.R_OK, (err) => {
-    if (err) {
-      res.status(404).send("File Not Found");
-    } else {
-      fs.readFile("file.txt", "utf8", (err, data) => {
-        if (err) {
-          res.status(500).send("Error Reading File");
-        } else {
-          res.send(data);
-        }
-      });
-    }
-  });
+app.get("/images", (req, res) => {
+  res.render("upload");
+});
+
+app.post("/upload", (req, res) => {
+  const { image } = req.files;
+
+  if (!image) return res.status(400).send("No image");
+
+  if (!/^image/.test(image.mimetype))
+    return res.status(400).send("Image not supported");
+
+  const fileExt = path.extname(image.name);
+
+  image.mv(
+    __dirname +
+      "/public/upload/" +
+      new Date()
+        .toLocaleDateString("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        .replaceAll("/", "-") +
+      fileExt
+  );
+  res.status(200).send("Data sent Successfully");
 });
 
 app.post("/send", (req, res) => {
