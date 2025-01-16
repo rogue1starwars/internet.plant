@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  node-application:
+    build: .
+    container_name: node-application
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - ./file.txt:/app/file.txt
+      - upload-data:/app/public/upload
+volumes:
+  upload-data:
