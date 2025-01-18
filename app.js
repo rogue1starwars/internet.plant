@@ -22,6 +22,35 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static("public"));
 
+app.use((err, req, res, next) => {
+  if (err) {
+    res.status(500).send("Something went wrong");
+  }
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("There was an uncaught error", err);
+  gracefulShutdown();
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("There was an unhandled rejection", err);
+  gracefulShutdown();
+});
+
+const gracefulShutdown = () => {
+  console.log("Server is shutting down");
+  server.close(() => {
+    console.log("Server is shut down");
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error("Server is not shutting down gracefully");
+    process.exit(1);
+  }, 10000);
+};
+
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
@@ -101,7 +130,7 @@ app.post("/send", (req, res) => {
   });
 });
 
-app.listen(PORT, (error) => {
+const server = app.listen(PORT, (error) => {
   if (!error)
     console.log(
       "Server is Successfully Running,and App is listening on port " + PORT
