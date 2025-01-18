@@ -91,7 +91,7 @@ app.get("/images", (req, res) => {
   res.render("upload");
 });
 
-app.post("/upload", (req, res) => {
+app.post("/upload", async (req, res) => {
   const { image } = req.files;
 
   if (!image) return res.status(400).send("No image");
@@ -101,21 +101,25 @@ app.post("/upload", (req, res) => {
 
   const fileExt = path.extname(image.name);
 
-  image.mv(
-    __dirname +
-      "/public/upload/" +
-      new Date()
-        .toLocaleDateString("ja-JP", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-        .replaceAll("/", "-") +
-      fileExt
-  );
+  try {
+    await image.mv(
+      __dirname +
+        "/public/upload/" +
+        new Date()
+          .toLocaleDateString("ja-JP", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+          .replaceAll("/", "-") +
+        fileExt
+    );
+  } catch (error) {
+    res.status(500).send("Error Uploading Image");
+  }
   res.status(200).send("Data sent Successfully");
 });
 
