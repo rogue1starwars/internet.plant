@@ -54,37 +54,38 @@ const gracefulShutdown = () => {
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
+const FILE_PATH = path.join(__dirname, "file.txt");
+const UPLOAD_PATH = path.join(__dirname, "public", "upload");
+
 app.get("/", async (req, res) => {
-  fs.access("file.txt", fs.constants.R_OK, (err) => {
-    if (err) {
-      res.status(404).send("File Not Found");
-    } else {
-      fs.readFile("file.txt", "utf8", (err, data) => {
-        if (err) {
-          res.status(500).send("Error Reading File");
-          return;
-        } else {
-          const message = data;
-          fs.readdir(path.join(__dirname, "public", "upload"), (err, files) => {
-            if (err) {
-              res.status(500).send("Error reading files");
-              return;
-            }
-
-            const sortedFiles = files
-              .filter((file) => /\.(jpg|jpeg|png|gif)$/i.test(file))
-              .sort()
-              .slice(0, 10);
-
-            res.render("index", {
-              message: message,
-              images: sortedFiles,
-            });
-          });
-        }
-      });
+  try {
+    // Check if directories exist
+    if (!fs.existsSync(UPLOAD_PATH)) {
+      fs.mkdirSync(UPLOAD_PATH, { recursive: true });
     }
-  });
+
+    console.log("Reading file from:", FILE_PATH); // Debug log
+
+    const data = await fs.promises.readFile(FILE_PATH, "utf8");
+    const files = await fs.promises.readdir(UPLOAD_PATH);
+
+    const sortedFiles = files
+      .filter((file) => /\.(jpg|jpeg|png|gif)$/i.test(file))
+      .sort()
+      .slice(0, 10);
+
+    res.render("index", {
+      message: data,
+      images: sortedFiles,
+    });
+  } catch (error) {
+    console.error("Error details:", {
+      error: error.message,
+      path: FILE_PATH,
+      stack: error.stack,
+    });
+    res.status(500).send(`Server Error: ${error.message}`);
+  }
 });
 
 app.get("/images", (req, res) => {
