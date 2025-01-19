@@ -124,6 +124,22 @@ app.post("/upload", async (req, res) => {
   res.status(200).send("Data sent Successfully");
 });
 
+app.get("/message", (req, res) => {
+  fs.access("file.txt", fs.constants.R_OK, (err) => {
+    if (err) {
+      res.status(404).send("File Not Found");
+    } else {
+      fs.readFile("file.txt", "utf8", (err, data) => {
+        if (err) {
+          res.status(500).send("Error Reading File");
+        } else {
+          res.send(data);
+        }
+      });
+    }
+  });
+});
+
 app.post("/send", (req, res) => {
   const { message } = req.body;
   fs.writeFile("file.txt", message, (err) => {
