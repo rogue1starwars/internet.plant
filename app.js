@@ -72,6 +72,7 @@ app.get("/", async (req, res) => {
     const sortedFiles = files
       .filter((file) => /\.(jpg|jpeg|png|gif)$/i.test(file))
       .sort()
+      .reverse()
       .slice(0, 10);
 
     res.render("index", {
